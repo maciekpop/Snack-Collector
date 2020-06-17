@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Snack Collector</string>
+
+    <string-array name="product_types">
+        <item>Słodycze</item>
+        <item>Słone przekąski</item>
+        <item>Napoje</item>
+    </string-array>
+
+    <string name="camPermission">Potrzebna zgoda na dostęp do kamery</string>
+    <string name="filesPermission">Potrzebna zgoda na dostęp do plików</string>
+</resources>

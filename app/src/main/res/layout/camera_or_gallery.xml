@@ -1,0 +1,63 @@
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:color="#1AFFFFFF">
+
+    <View
+        android:id="@+id/dialog1"
+        android:layout_width="300dp"
+        android:layout_height="120dp"
+        android:background="@drawable/dialog_bgrnd"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.495"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.499" />
+
+    <Button
+        android:id="@+id/buttonCamera"
+        android:layout_width="wrap_content"
+        android:layout_height="30dp"
+        android:layout_marginStart="32dp"
+        android:layout_marginBottom="20dp"
+        android:background="@drawable/btn_bgrnd"
+        android:text="Aparat"
+        app:layout_constraintBottom_toBottomOf="@+id/dialog1"
+        app:layout_constraintStart_toStartOf="@+id/dialog1" />
+
+    <Button
+        android:id="@+id/buttonGallery"
+        android:layout_width="wrap_content"
+        android:layout_height="30dp"
+        android:layout_marginEnd="32dp"
+        android:layout_marginBottom="20dp"
+        android:background="@drawable/btn_bgrnd"
+        android:text="Galeria"
+        app:layout_constraintBottom_toBottomOf="@+id/dialog1"
+        app:layout_constraintEnd_toEndOf="@+id/dialog1" />
+
+    <TextView
+        android:id="@+id/textViewListProductType"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="Wybierz źródło zdjęcia"
+        app:layout_constraintEnd_toEndOf="@+id/dialog1"
+        app:layout_constraintStart_toStartOf="@+id/dialog1"
+        app:layout_constraintTop_toTopOf="@+id/dialog1" />
+
+    <Button
+        android:id="@+id/buttonExitDialog"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginEnd="5dp"
+        android:background="@drawable/btn_bgrnd"
+        android:foreground="@drawable/ic_baseline_clear_24"
+        app:layout_constraintEnd_toEndOf="@+id/dialog1"
+        app:layout_constraintTop_toTopOf="@+id/dialog1" />
+</androidx.constraintlayout.widget.ConstraintLayout>
