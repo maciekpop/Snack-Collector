@@ -23,6 +23,7 @@ class DataBaseHelper extends SQLiteOpenHelper {
                 ProductEntry.TABLE_NAME + " (" +
                 ProductEntry.PRODUCT_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 ProductEntry.PRODUCT_NAME + " TEXT, " +
+                ProductEntry.PRODUCT_TYPE + " TEXT, " +
                 ProductEntry.PRODUCT_PRICE + " TEXT, " +
                 ProductEntry.PRODUCT_ACCESSIBILITY + " TEXT, " +
                 ProductEntry.PRODUCT_RATING + " REAL, " +

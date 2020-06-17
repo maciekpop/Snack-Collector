@@ -10,6 +10,7 @@ public class ProductContract {
         public static final String TABLE_NAME = "product_list";
         public static final String PRODUCT_ID = "product_id";
         public static final String PRODUCT_NAME = "product_name";
+        public static final String PRODUCT_TYPE = "product_type";
         public static final String PRODUCT_PRICE = "product_price";
         public static final String PRODUCT_ACCESSIBILITY = "product_accessibility";
         public static final String PRODUCT_RATING = "product_rating";

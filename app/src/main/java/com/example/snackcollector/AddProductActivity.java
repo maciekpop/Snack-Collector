@@ -4,13 +4,10 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import android.Manifest;
 import android.app.Activity;
 import android.app.Dialog;
-import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -39,14 +36,19 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import com.example.snackcollector.ProductContract.*;
-
 public class AddProductActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
 
     private static final int REQUEST_CAMERA_PERMISSION_CODE = 99;
     private static final int REQUEST_READ_EXTERNAL_STORAGE_CODE = 98;
     private static final int REQUEST_IMAGE_PICK = 1;
     private static final int REQUEST_CAMERA = 2;
+    public static final String NAME = "name";
+    public static final String TYPE = "type";
+    public static final String PRICE = "price";
+    public static final String ACCESSIBILITY = "accessibility";
+    public static final String RATING = "rating";
+    public static final String PATH = "path";
+    public static final String PRODUCT_DATA = "product_data";
 
     private static Dialog dialogCameraOrGallery;
 
@@ -57,24 +59,12 @@ public class AddProductActivity extends AppCompatActivity implements AdapterView
     private ImageView imageViewProduct;
     private String currentPhotoPath;
 
-    private SQLiteDatabase sqLiteDatabase;
-    private ProductAdapter productAdapter;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        DataBaseHelper dataBaseHelper = new DataBaseHelper(this);
-        sqLiteDatabase = dataBaseHelper.getWritableDatabase();
-
-
         initActivityItems();
-
-//        RecyclerView recyclerView = findViewById(R.id.recycleView);
-//        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-//        productAdapter = new ProductAdapter(this, getAllItems());
-//        recyclerView.setAdapter(productAdapter);
 
         buttonAddImage.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -107,7 +97,7 @@ public class AddProductActivity extends AppCompatActivity implements AdapterView
     }
 
     @Override
-    public void onNothingSelected(AdapterView<?> parent) {}
+    public void onNothingSelected(AdapterView<?> parent) { }
 
     public void onClickAddProduct(View view) {
 
@@ -120,17 +110,8 @@ public class AddProductActivity extends AppCompatActivity implements AdapterView
             Toast.makeText(this, "Uzupełnij niezbędne dane.", Toast.LENGTH_SHORT).show();
             return;
         }
-        ContentValues cv = new ContentValues();
-
-        cv.put(ProductEntry.PRODUCT_NAME, editTextProductName.getText().toString());
-        cv.put(ProductEntry.PRODUCT_PRICE, editTextProductPrice.getText().toString());
-        cv.put(ProductEntry.PRODUCT_ACCESSIBILITY, editTextAccessibility.getText().toString());
-        cv.put(ProductEntry.PRODUCT_RATING, ratingBar.getRating());
-        cv.put(ProductEntry.PRODUCT_FILE_PATH, currentPhotoPath);
-
-        sqLiteDatabase.insert(ProductEntry.TABLE_NAME, null, cv);
-        productAdapter.swapCursor(getAllItems());
-
+        Toast.makeText(this, "Dodano produkt.", Toast.LENGTH_SHORT).show();
+        setBundle();
         clearAll();
         finish();
     }
@@ -144,16 +125,17 @@ public class AddProductActivity extends AppCompatActivity implements AdapterView
         buttonAddImage.setText("Dodaj zdjęcie");
     }
 
-    private Cursor getAllItems() {
-        return sqLiteDatabase.query(
-                ProductContract.ProductEntry.TABLE_NAME,
-                null,
-                null,
-                null,
-                null,
-                null,
-                ProductContract.ProductEntry.PRODUCT_ID + " DESC"
-        );
+    private void setBundle() {
+        Intent intent = new Intent(AddProductActivity.this, RecyclerViewActivity.class);
+        Bundle bundle = new Bundle();
+        bundle.putString(NAME, editTextProductName.getText().toString().trim());
+        bundle.putString(TYPE, productType);
+        bundle.putString(PRICE, editTextProductPrice.getText().toString().trim());
+        bundle.putString(ACCESSIBILITY, editTextAccessibility.getText().toString().trim());
+        bundle.putFloat(RATING, ratingBar.getRating());
+        bundle.putString(PATH, currentPhotoPath);
+        intent.putExtra(PRODUCT_DATA, bundle);
+        setResult(RESULT_OK, intent);
     }
 
     @Override
@@ -279,7 +261,6 @@ public class AddProductActivity extends AppCompatActivity implements AdapterView
         dialogCameraOrGallery = new Dialog(activity);
         dialogCameraOrGallery.setCancelable(false);
         dialogCameraOrGallery.setContentView(R.layout.camera_or_gallery);
-        //dialogCameraOrGallery.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
 
         Button buttonGallery = dialogCameraOrGallery.findViewById(R.id.buttonGallery);
         Button buttonCamera = dialogCameraOrGallery.findViewById(R.id.buttonCamera);
@@ -322,4 +303,3 @@ public class AddProductActivity extends AppCompatActivity implements AdapterView
     }
 
 }
-

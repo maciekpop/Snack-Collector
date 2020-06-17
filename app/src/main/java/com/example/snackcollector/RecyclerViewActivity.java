@@ -1,9 +1,11 @@
 package com.example.snackcollector;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -13,10 +15,10 @@ import android.widget.Button;
 
 public class RecyclerViewActivity extends AppCompatActivity {
 
-    public static RecyclerView recyclerView;
-
     private SQLiteDatabase sqLiteDatabase;
     private ProductAdapter productAdapter;
+
+    private static final int GET_PRODUCT_DATA = 111;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,10 +38,9 @@ public class RecyclerViewActivity extends AppCompatActivity {
         buttonGoToAddProduct.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(RecyclerViewActivity.this, AddProductActivity.class));
+                startActivityForResult(new Intent(RecyclerViewActivity.this, AddProductActivity.class), GET_PRODUCT_DATA);
             }
         });
-
     }
 
     private Cursor getAllItems() {
@@ -52,5 +53,27 @@ public class RecyclerViewActivity extends AppCompatActivity {
                 null,
                 ProductContract.ProductEntry.PRODUCT_ID + " DESC"
         );
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if(resultCode == RESULT_OK && requestCode == GET_PRODUCT_DATA && data != null) {
+            Bundle bundle = data.getBundleExtra(AddProductActivity.PRODUCT_DATA);
+
+            ContentValues cv = new ContentValues();
+
+            cv.put(ProductContract.ProductEntry.PRODUCT_NAME, bundle.getString(AddProductActivity.NAME));
+            cv.put(ProductContract.ProductEntry.PRODUCT_TYPE, bundle.getString(AddProductActivity.TYPE));
+            cv.put(ProductContract.ProductEntry.PRODUCT_PRICE, bundle.getString(AddProductActivity.PRICE));
+            cv.put(ProductContract.ProductEntry.PRODUCT_ACCESSIBILITY, bundle.getString(AddProductActivity.ACCESSIBILITY));
+            cv.put(ProductContract.ProductEntry.PRODUCT_RATING, bundle.getFloat(AddProductActivity.RATING));
+            cv.put(ProductContract.ProductEntry.PRODUCT_FILE_PATH, bundle.getString(AddProductActivity.PATH));
+
+            sqLiteDatabase.insert(ProductContract.ProductEntry.TABLE_NAME, null, cv);
+            productAdapter.swapCursor(getAllItems());
+
+        }
     }
 }
