@@ -19,12 +19,22 @@ class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductViewHold
     private Context mContext;
     private Cursor mCursor;
 
+    private OnProductClickListener mListener;
+
     public ProductAdapter(Context context, Cursor cursor) {
         mContext = context;
         mCursor = cursor;
     }
 
-    class ProductViewHolder extends RecyclerView.ViewHolder {
+    public interface OnProductClickListener {
+        void onProductClick(int position);
+    }
+
+    public void setOnProductClickListener(OnProductClickListener listener) {
+        mListener = listener;
+    }
+
+    public static class ProductViewHolder extends RecyclerView.ViewHolder {
 
         public TextView
                 textViewListProductName,
@@ -34,8 +44,7 @@ class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductViewHold
 
         public ImageView imageViewListProduct;
 
-
-        public ProductViewHolder(@NonNull View itemView) {
+        public ProductViewHolder(@NonNull View itemView, final OnProductClickListener listener) {
             super(itemView);
 
             textViewListProductName = itemView.findViewById(R.id.textViewListProductName);
@@ -43,6 +52,18 @@ class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductViewHold
             textViewListProductAccessibility = itemView.findViewById(R.id.textViewListProductAccessibility);
             textViewListProductPrice = itemView.findViewById(R.id.textViewListProductPrice);
             imageViewListProduct = itemView.findViewById(R.id.imageViewListProduct);
+
+            itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if(listener != null) {
+                        int position = getAdapterPosition();
+                        if(position != RecyclerView.NO_POSITION) {
+                            listener.onProductClick(position);
+                        }
+                    }
+                }
+            });
         }
     }
 
@@ -51,7 +72,7 @@ class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductViewHold
     public ProductViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         LayoutInflater inflater = LayoutInflater.from(mContext);
         View view = inflater.inflate(R.layout.product_item, parent, false);
-        return new ProductViewHolder(view);
+        return new ProductViewHolder(view, mListener);
     }
 
     @Override
@@ -59,6 +80,8 @@ class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductViewHold
         if(!mCursor.moveToPosition(position)) {
             return;
         }
+
+        long id = mCursor.getInt(mCursor.getColumnIndex(ProductContract.ProductEntry.PRODUCT_ID));
 
         String
                 productName = mCursor.getString(mCursor.getColumnIndex(ProductContract.ProductEntry.PRODUCT_NAME)),
@@ -68,6 +91,8 @@ class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductViewHold
 
         float productRating = mCursor.getFloat(mCursor.getColumnIndex(ProductContract.ProductEntry.PRODUCT_RATING));
 
+
+        holder.itemView.setTag(id);
         holder.textViewListProductName.setText(productName);
         holder.textViewListRating.setText(productRating + "/5");
         holder.textViewListProductAccessibility.setText(productAccessibility);
@@ -77,7 +102,7 @@ class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductViewHold
             holder.imageViewListProduct.setImageURI(Uri.fromFile(new File(productImageFilePath)));
 
         if(Float.parseFloat(productPrice) < 1f) {
-            holder.textViewListProductPrice.setText(productPrice + " gr");
+            holder.textViewListProductPrice.setText(Float.parseFloat(productPrice)*100 + " gr");
         }
         else
             holder.textViewListProductPrice.setText(productPrice + " zł");

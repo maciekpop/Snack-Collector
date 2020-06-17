@@ -1,7 +1,9 @@
 package com.example.snackcollector;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -13,13 +15,14 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 
+import java.util.ArrayList;
+
 public class RecyclerViewActivity extends AppCompatActivity {
 
     private SQLiteDatabase sqLiteDatabase;
     private ProductAdapter productAdapter;
-
     private static final int GET_PRODUCT_DATA = 111;
-
+    public static final String PRODUCT_ID_KEY = "product_id";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -28,10 +31,7 @@ public class RecyclerViewActivity extends AppCompatActivity {
         DataBaseHelper dataBaseHelper = new DataBaseHelper(this);
         sqLiteDatabase = dataBaseHelper.getWritableDatabase();
 
-        RecyclerView recyclerView = findViewById(R.id.recycleView);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        productAdapter = new ProductAdapter(this, getAllItems());
-        recyclerView.setAdapter(productAdapter);
+        buildRecyclerView();
 
         Button buttonGoToAddProduct = findViewById(R.id.buttonGoToAddProduct);
 
@@ -39,6 +39,22 @@ public class RecyclerViewActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 startActivityForResult(new Intent(RecyclerViewActivity.this, AddProductActivity.class), GET_PRODUCT_DATA);
+            }
+        });
+    }
+
+    private void buildRecyclerView() {
+        final RecyclerView recyclerView = findViewById(R.id.recycleView);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        productAdapter = new ProductAdapter(this, getAllItems());
+        recyclerView.setAdapter(productAdapter);
+        productAdapter.setOnProductClickListener(new ProductAdapter.OnProductClickListener() {
+            @Override
+            public void onProductClick(int position) {
+                long id = (long) recyclerView.findViewHolderForAdapterPosition(position).itemView.getTag();
+                Intent intent = new Intent(RecyclerViewActivity.this, ProductDetailsActivity.class);
+                intent.putExtra(PRODUCT_ID_KEY, id);
+                startActivity(intent);
             }
         });
     }
