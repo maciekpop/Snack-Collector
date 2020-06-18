@@ -1,6 +1,5 @@
 package com.example.snackcollector;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
@@ -8,8 +7,10 @@ import androidx.core.content.FileProvider;
 import android.Manifest;
 import android.app.Activity;
 import android.app.Dialog;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
@@ -34,59 +35,105 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class AddProductActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
+public class EditProductActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
 
-    public static final int REQUEST_CAMERA_PERMISSION_CODE = 99;
-    public static final int REQUEST_READ_EXTERNAL_STORAGE_CODE = 98;
-    public static final int REQUEST_IMAGE_PICK = 1;
-    public static final int REQUEST_CAMERA = 2;
+    private long id;
+    private int position;
+
+    private EditText editTextChangeName,
+            editTextChangePrice,
+            editTextChangeAccessibility;
+
+    private RatingBar ratingBarChange;
+
+    private ImageView imageViewChangeImage;
+
+    private String productType;
+    private String imagePath;
+
+    private Button buttonChangeImage;
+
+    private static Dialog dialogCameraOrGallery;
+
+    private SQLiteDatabase sqLiteDatabase;
+   // private ProductAdapter productAdapter;
+
+    public static final String ID = "id";
     public static final String NAME = "name";
     public static final String TYPE = "type";
     public static final String PRICE = "price";
     public static final String ACCESSIBILITY = "accessibility";
     public static final String RATING = "rating";
     public static final String PATH = "path";
-    public static final String PRODUCT_DATA = "product_data";
-
-    private static Dialog dialogCameraOrGallery;
-
-    private Button buttonAddImage;
-    private EditText editTextProductName, editTextProductPrice, editTextAccessibility;
-    private RatingBar ratingBar;
-    private String productType;
-    private ImageView imageViewProduct;
-    private String currentPhotoPath;
+    public static final String EDITED_PRODUCT_DATA = "edited_product_data";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_add_product);
-
-        initActivityItems();
-
-        buttonAddImage.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showImageChooseDialog(AddProductActivity.this);
-            }
-        });
+        setContentView(R.layout.edit_product);
+        initView();
     }
 
-    private void initActivityItems() {
+    private void initView() {
 
-        Spinner spinnerProductType = findViewById(R.id.spinnerProductType);
-        editTextProductName = findViewById(R.id.editTextProductName);
-        editTextProductPrice = findViewById(R.id.editTextProductPrice);
-        editTextAccessibility = findViewById(R.id.editTextAccessibility);
-        ratingBar = findViewById(R.id.ratingBar);
-        imageViewProduct = findViewById(R.id.imageViewProduct);
-        buttonAddImage = findViewById(R.id.buttonAddImage);
+        DataBaseHelper dataBaseHelper = new DataBaseHelper(this);
+        sqLiteDatabase = dataBaseHelper.getReadableDatabase();
 
-        ArrayAdapter<CharSequence> arrayAdapter = ArrayAdapter.createFromResource(AddProductActivity.this, R.array.product_types, android.R.layout.simple_spinner_item);
+        editTextChangeName = findViewById(R.id.editTextChangeName);
+        editTextChangePrice = findViewById(R.id.editTextChangePrice);
+        editTextChangeAccessibility = findViewById(R.id.editTextChangeAccessibility);
+        ratingBarChange = findViewById(R.id.ratingBarChange);
+
+        imageViewChangeImage = findViewById(R.id.imageViewChangeImage);
+
+        Spinner spinnerChangeType = findViewById(R.id.spinnerChangeType);
+
+        buttonChangeImage = findViewById(R.id.buttonChangeImage);
+
+        ArrayAdapter<CharSequence> arrayAdapter = ArrayAdapter.createFromResource(EditProductActivity.this, R.array.product_types, android.R.layout.simple_spinner_item);
         arrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinnerProductType.setAdapter(arrayAdapter);
-        spinnerProductType.setOnItemSelectedListener(this);
+        spinnerChangeType.setAdapter(arrayAdapter);
+        spinnerChangeType.setOnItemSelectedListener(this);
 
+
+        Intent intent = getIntent();
+        Bundle bundle = intent.getBundleExtra(ProductDetailsActivity.REQUEST_EDIT);
+        position = bundle.getInt(RecyclerViewActivity.POSITION);
+        id = bundle.getLong(ProductDetailsActivity.ID);
+        editTextChangeName.setText(bundle.getString(ProductDetailsActivity.NAME));
+        editTextChangePrice.setText(bundle.getString(ProductDetailsActivity.PRICE));
+        editTextChangeAccessibility.setText(bundle.getString(ProductDetailsActivity.ACCESSIBILITY));
+        ratingBarChange.setRating(bundle.getFloat(ProductDetailsActivity.RATING, 0));
+        imagePath = bundle.getString(ProductDetailsActivity.PATH);
+
+        if(imagePath.contains("external")) {
+            try {
+                Uri imageUri = Uri.parse(imagePath);
+                Bitmap bitmap = BitmapFactory.decodeStream(getContentResolver().openInputStream(imageUri));
+                showImage(imageViewChangeImage, bitmap, setRotationVariables(imageUri));
+            }
+            catch (Exception e) {
+                Toast.makeText(this, "Nie ma danych.", Toast.LENGTH_SHORT).show();
+            }
+        }
+        else {
+            try {
+                Uri imageUri = Uri.fromFile(new File(imagePath));
+                Bitmap bitmap = BitmapFactory.decodeStream(getContentResolver().openInputStream(imageUri));
+                showImage(imageViewChangeImage, bitmap, setRotationVariables(imageUri));
+            }
+            catch (Exception e) {
+                Toast.makeText(this, "Nie ma danych.", Toast.LENGTH_SHORT).show();
+            }
+        }
+
+        buttonChangeImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showImageChooseDialog(EditProductActivity.this);
+            }
+        });
     }
 
     @Override
@@ -97,69 +144,66 @@ public class AddProductActivity extends AppCompatActivity implements AdapterView
     @Override
     public void onNothingSelected(AdapterView<?> parent) { }
 
-    public void onClickAddProduct(View view) {
+    public void confirmChanges(View view) {
 
-        if(TextUtils.isEmpty(editTextProductName.getText().toString().trim()) ||
+        if(TextUtils.isEmpty(editTextChangeName.getText().toString().trim()) ||
                 TextUtils.isEmpty(productType.trim()) ||
-                TextUtils.isEmpty(editTextAccessibility.getText().toString().trim()) ||
-                TextUtils.isEmpty(editTextProductPrice.getText().toString().trim()) ||
-                ratingBar.getRating() == 0 ||
-                TextUtils.isEmpty(currentPhotoPath)) {
+                TextUtils.isEmpty(editTextChangeAccessibility.getText().toString().trim()) ||
+                TextUtils.isEmpty(editTextChangePrice.getText().toString().trim()) ||
+                ratingBarChange.getRating() == 0 ||
+                TextUtils.isEmpty(imagePath)) {
             Toast.makeText(this, "Uzupełnij niezbędne dane.", Toast.LENGTH_SHORT).show();
             return;
         }
-        Toast.makeText(this, "Dodano produkt.", Toast.LENGTH_SHORT).show();
-        setBundle();
+        Toast.makeText(this, "Zmieniono produkt.", Toast.LENGTH_SHORT).show();
+        finalizeEdit();
         clearAll();
         finish();
     }
 
     private void clearAll() {
-        editTextProductName.getText().clear();
-        editTextProductPrice.getText().clear();
-        editTextAccessibility.getText().clear();
-        ratingBar.setRating(0);
-        imageViewProduct.setImageDrawable(null);
-        buttonAddImage.setText("Dodaj zdjęcie");
+        editTextChangeName.getText().clear();
+        editTextChangePrice.getText().clear();
+        editTextChangeAccessibility.getText().clear();
+        ratingBarChange.setRating(0);
+        imageViewChangeImage.setImageDrawable(null);
     }
 
-    private void setBundle() {
-        Intent intent = new Intent(AddProductActivity.this, RecyclerViewActivity.class);
-        Bundle bundle = new Bundle();
-        bundle.putString(NAME, editTextProductName.getText().toString().trim());
-        bundle.putString(TYPE, productType);
-        bundle.putString(PRICE, editTextProductPrice.getText().toString().trim());
-        bundle.putString(ACCESSIBILITY, editTextAccessibility.getText().toString().trim());
-        bundle.putFloat(RATING, ratingBar.getRating());
-        bundle.putString(PATH, currentPhotoPath);
-        intent.putExtra(PRODUCT_DATA, bundle);
-        setResult(RESULT_OK, intent);
+    private void finalizeEdit() {
+        ContentValues cv = new ContentValues();
+        cv.put(ProductContract.ProductEntry.PRODUCT_NAME, editTextChangeName.getText().toString().trim());
+        cv.put(ProductContract.ProductEntry.PRODUCT_TYPE, productType);
+        cv.put(ProductContract.ProductEntry.PRODUCT_PRICE, editTextChangePrice.getText().toString().trim());
+        cv.put(ProductContract.ProductEntry.PRODUCT_ACCESSIBILITY, editTextChangeAccessibility.getText().toString().trim());
+        cv.put(ProductContract.ProductEntry.PRODUCT_RATING, ratingBarChange.getRating());
+        cv.put(ProductContract.ProductEntry.PRODUCT_FILE_PATH, imagePath);
+
+        sqLiteDatabase.update(
+                ProductContract.ProductEntry.TABLE_NAME,
+                cv,
+                ProductContract.ProductEntry.PRODUCT_ID + " = " + id,
+                null);
+
+        RecyclerViewActivity.productAdapter.swapCursor(sqLiteDatabase.query(
+                ProductContract.ProductEntry.TABLE_NAME,
+                null,
+                null,
+                null,
+                null,
+                null,
+                ProductContract.ProductEntry.PRODUCT_ID + " DESC"
+        ));
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
-        if(requestCode == REQUEST_CAMERA_PERMISSION_CODE) {
-            if(grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] == PackageManager.PERMISSION_GRANTED)
-                dispatchTakePictureIntent();
-            if(grantResults[0] == PackageManager.PERMISSION_DENIED)
-                Toast.makeText(this, R.string.camPermission, Toast.LENGTH_LONG).show();
-            if(grantResults[1] == PackageManager.PERMISSION_DENIED)
-                Toast.makeText(this, R.string.filesPermission, Toast.LENGTH_LONG).show();
-        }
-
-        if(requestCode == REQUEST_READ_EXTERNAL_STORAGE_CODE) {
-            if(grantResults[0] == PackageManager.PERMISSION_GRANTED)
-                dispatchPickImageIntent();
-            else
-                Toast.makeText(this, R.string.filesPermission, Toast.LENGTH_LONG).show();
-        }
+    public void cancelEditing(View view) {
+        clearAll();
+        finish();
     }
+
 
     private void dispatchPickImageIntent() {
         Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-        startActivityForResult(intent, REQUEST_IMAGE_PICK);
+        startActivityForResult(intent, AddProductActivity.REQUEST_IMAGE_PICK);
     }
 
     private void dispatchTakePictureIntent() {
@@ -176,9 +220,9 @@ public class AddProductActivity extends AppCompatActivity implements AdapterView
             // Continue only if the File was successfully created
             if (photoFile != null) {
                 Uri imageUri = FileProvider.getUriForFile(this, "com.example.snackcollector.fileProvider", photoFile);
-                currentPhotoPath = photoFile.getAbsolutePath();
+                imagePath = photoFile.getAbsolutePath();
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
-                startActivityForResult(takePictureIntent, REQUEST_CAMERA);
+                startActivityForResult(takePictureIntent, AddProductActivity.REQUEST_CAMERA);
             }
         }
     }
@@ -193,7 +237,6 @@ public class AddProductActivity extends AppCompatActivity implements AdapterView
                 ".jpg",         /* suffix */
                 storageDir      /* directory */
         );
-        //currentPhotoPath = image.getAbsolutePath();
         return image;
     }
 
@@ -227,25 +270,23 @@ public class AddProductActivity extends AppCompatActivity implements AdapterView
         if(resultCode == RESULT_OK) {
             dialogCameraOrGallery.dismiss();
 
-            if (requestCode == REQUEST_IMAGE_PICK) {
+            if (requestCode == AddProductActivity.REQUEST_IMAGE_PICK) {
                 try {
                     Uri imageUri = data.getData();
-                    currentPhotoPath = imageUri.toString();
+                    imagePath = imageUri.toString();
                     Bitmap bitmap = BitmapFactory.decodeStream(getContentResolver().openInputStream(imageUri));
-                    showImage(imageViewProduct, bitmap, setRotationVariables(imageUri));
-                    buttonAddImage.setText("Zmień zdjęcie");
+                    showImage(imageViewChangeImage, bitmap, setRotationVariables(imageUri));
                 }
                 catch (Exception e) {
                     Toast.makeText(this, "Nie ma danych.", Toast.LENGTH_SHORT).show();
                     dialogCameraOrGallery.show();
                 }
             }
-            if (requestCode == REQUEST_CAMERA) {
+            if (requestCode == AddProductActivity.REQUEST_CAMERA) {
                 try {
-                    Uri imageUri = Uri.fromFile(new File(currentPhotoPath));
+                    Uri imageUri = Uri.fromFile(new File(imagePath));
                     Bitmap bitmap = BitmapFactory.decodeStream(getContentResolver().openInputStream(imageUri));
-                    showImage(imageViewProduct, bitmap, setRotationVariables(imageUri));
-                    buttonAddImage.setText("Zmień zdjęcie");
+                    showImage(imageViewChangeImage, bitmap, setRotationVariables(imageUri));
                 }
                 catch (Exception e) {
                     Toast.makeText(this, "Nie ma danych.", Toast.LENGTH_SHORT).show();
@@ -272,7 +313,7 @@ public class AddProductActivity extends AppCompatActivity implements AdapterView
                     dispatchPickImageIntent();
                 else {
                     String[] permissionRequest = {Manifest.permission.READ_EXTERNAL_STORAGE};
-                    requestPermissions(permissionRequest, REQUEST_READ_EXTERNAL_STORAGE_CODE);
+                    requestPermissions(permissionRequest, AddProductActivity.REQUEST_READ_EXTERNAL_STORAGE_CODE);
                 }
             }
         });
@@ -285,7 +326,7 @@ public class AddProductActivity extends AppCompatActivity implements AdapterView
                     dispatchTakePictureIntent();
                 else {
                     String[] permissionRequest = {Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE};
-                    requestPermissions(permissionRequest, REQUEST_CAMERA_PERMISSION_CODE);
+                    requestPermissions(permissionRequest, AddProductActivity.REQUEST_CAMERA_PERMISSION_CODE);
                 }
             }
         });
@@ -299,5 +340,4 @@ public class AddProductActivity extends AppCompatActivity implements AdapterView
 
         dialogCameraOrGallery.show();
     }
-
 }

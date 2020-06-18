@@ -14,15 +14,17 @@ import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 
 public class RecyclerViewActivity extends AppCompatActivity {
 
     private SQLiteDatabase sqLiteDatabase;
-    private ProductAdapter productAdapter;
+    public static ProductAdapter productAdapter;
     private static final int GET_PRODUCT_DATA = 111;
     public static final String PRODUCT_ID_KEY = "product_id";
+    public static final String POSITION = "position";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -54,6 +56,7 @@ public class RecyclerViewActivity extends AppCompatActivity {
                 long id = (long) recyclerView.findViewHolderForAdapterPosition(position).itemView.getTag();
                 Intent intent = new Intent(RecyclerViewActivity.this, ProductDetailsActivity.class);
                 intent.putExtra(PRODUCT_ID_KEY, id);
+                intent.putExtra(POSITION, position);
                 startActivity(intent);
             }
         });
@@ -75,21 +78,25 @@ public class RecyclerViewActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if(resultCode == RESULT_OK && requestCode == GET_PRODUCT_DATA && data != null) {
-            Bundle bundle = data.getBundleExtra(AddProductActivity.PRODUCT_DATA);
+        if(resultCode == RESULT_OK) {
+            if(requestCode == GET_PRODUCT_DATA && data != null) {
+                Bundle bundle = data.getBundleExtra(AddProductActivity.PRODUCT_DATA);
 
-            ContentValues cv = new ContentValues();
+                ContentValues cv = new ContentValues();
 
-            cv.put(ProductContract.ProductEntry.PRODUCT_NAME, bundle.getString(AddProductActivity.NAME));
-            cv.put(ProductContract.ProductEntry.PRODUCT_TYPE, bundle.getString(AddProductActivity.TYPE));
-            cv.put(ProductContract.ProductEntry.PRODUCT_PRICE, bundle.getString(AddProductActivity.PRICE));
-            cv.put(ProductContract.ProductEntry.PRODUCT_ACCESSIBILITY, bundle.getString(AddProductActivity.ACCESSIBILITY));
-            cv.put(ProductContract.ProductEntry.PRODUCT_RATING, bundle.getFloat(AddProductActivity.RATING));
-            cv.put(ProductContract.ProductEntry.PRODUCT_FILE_PATH, bundle.getString(AddProductActivity.PATH));
+                cv.put(ProductContract.ProductEntry.PRODUCT_NAME, bundle.getString(AddProductActivity.NAME));
+                cv.put(ProductContract.ProductEntry.PRODUCT_TYPE, bundle.getString(AddProductActivity.TYPE));
+                cv.put(ProductContract.ProductEntry.PRODUCT_PRICE, bundle.getString(AddProductActivity.PRICE));
+                cv.put(ProductContract.ProductEntry.PRODUCT_ACCESSIBILITY, bundle.getString(AddProductActivity.ACCESSIBILITY));
+                cv.put(ProductContract.ProductEntry.PRODUCT_RATING, bundle.getFloat(AddProductActivity.RATING));
+                cv.put(ProductContract.ProductEntry.PRODUCT_FILE_PATH, bundle.getString(AddProductActivity.PATH));
 
-            sqLiteDatabase.insert(ProductContract.ProductEntry.TABLE_NAME, null, cv);
-            productAdapter.swapCursor(getAllItems());
+                sqLiteDatabase.insert(ProductContract.ProductEntry.TABLE_NAME, null, cv);
+                productAdapter.swapCursor(getAllItems());
 
+            }
         }
     }
+
+
 }

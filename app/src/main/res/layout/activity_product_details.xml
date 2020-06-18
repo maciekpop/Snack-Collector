@@ -43,6 +43,7 @@
                 android:layout_marginTop="16dp"
                 android:layout_marginBottom="16dp"
                 android:background="@drawable/btn_bgrnd"
+                android:onClick="editProduct"
                 android:text="Edytuj"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"

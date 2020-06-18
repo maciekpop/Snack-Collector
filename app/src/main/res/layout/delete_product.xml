@@ -7,7 +7,7 @@
     android:color="#1AFFFFFF">
 
     <View
-        android:id="@+id/dialog1"
+        android:id="@+id/dialog2"
         android:layout_width="300dp"
         android:layout_height="120dp"
         android:background="@drawable/dialog_bgrnd"
@@ -19,45 +19,35 @@
         app:layout_constraintVertical_bias="0.499" />
 
     <Button
-        android:id="@+id/buttonCamera"
-        android:layout_width="wrap_content"
+        android:id="@+id/buttonConfirmDelete"
+        android:layout_width="100dp"
         android:layout_height="30dp"
-        android:layout_marginStart="32dp"
         android:layout_marginBottom="20dp"
         android:background="@drawable/btn_bgrnd"
-        android:text="Aparat"
-        app:layout_constraintBottom_toBottomOf="@+id/dialog1"
-        app:layout_constraintStart_toStartOf="@+id/dialog1" />
-
-    <Button
-        android:id="@+id/buttonGallery"
-        android:layout_width="wrap_content"
-        android:layout_height="30dp"
-        android:layout_marginEnd="32dp"
-        android:layout_marginBottom="20dp"
-        android:background="@drawable/btn_bgrnd"
-        android:text="Galeria"
-        app:layout_constraintBottom_toBottomOf="@+id/dialog1"
-        app:layout_constraintEnd_toEndOf="@+id/dialog1" />
+        android:text="Zatwierdź"
+        app:layout_constraintBottom_toBottomOf="@+id/dialog2"
+        app:layout_constraintEnd_toEndOf="@+id/dialog2"
+        app:layout_constraintStart_toStartOf="@+id/dialog2" />
 
     <TextView
-        android:id="@+id/textViewImageSource"
+        android:id="@+id/textViewWarning"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
-        android:text="Wybierz źródło zdjęcia"
-        app:layout_constraintEnd_toEndOf="@+id/dialog1"
-        app:layout_constraintStart_toStartOf="@+id/dialog1"
-        app:layout_constraintTop_toTopOf="@+id/dialog1" />
+        android:text="Czy na pewno\n chcesz usunąć ten produkt?"
+        android:textAlignment="center"
+        app:layout_constraintEnd_toEndOf="@+id/dialog2"
+        app:layout_constraintStart_toStartOf="@+id/dialog2"
+        app:layout_constraintTop_toTopOf="@+id/dialog2" />
 
     <Button
-        android:id="@+id/buttonExitDialog"
+        android:id="@+id/buttonCancel"
         android:layout_width="24dp"
         android:layout_height="24dp"
         android:layout_marginTop="5dp"
         android:layout_marginEnd="5dp"
         android:background="@drawable/btn_bgrnd"
         android:foreground="@drawable/ic_baseline_clear_24"
-        app:layout_constraintEnd_toEndOf="@+id/dialog1"
-        app:layout_constraintTop_toTopOf="@+id/dialog1" />
+        app:layout_constraintEnd_toEndOf="@+id/dialog2"
+        app:layout_constraintTop_toTopOf="@+id/dialog2" />
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -2,6 +2,8 @@ package com.example.snackcollector;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -96,8 +98,9 @@ class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductViewHold
         holder.textViewListProductName.setText(productName);
         holder.textViewListRating.setText(productRating + "/5");
         holder.textViewListProductAccessibility.setText(productAccessibility);
-        if(productImageFilePath.contains("external"))
-            holder.imageViewListProduct.setImageURI(Uri.parse(productImageFilePath));
+        if(productImageFilePath.contains("external")) {
+                holder.imageViewListProduct.setImageURI(Uri.parse(productImageFilePath));
+        }
         else
             holder.imageViewListProduct.setImageURI(Uri.fromFile(new File(productImageFilePath)));
 
